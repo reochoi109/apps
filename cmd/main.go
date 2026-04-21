@@ -1,120 +1,18 @@
 package main
 
 import (
-	"bufio"
-	"errors"
+	"apps/config"
 	"fmt"
-	"io"
 	"os"
-	"strconv"
 )
 
-var usageString = fmt.Sprintf(`Usage: %s <integer> [-h|--help]
-
-A greeter application which prints the name you entered <integer> number
-of times.
-`, os.Args[0])
-
 func main() {
-	os.Exit(run(os.Stdin, os.Stdout, os.Args[1:]))
-}
-
-func run(stdin io.Reader, stdout io.Writer, args []string) int {
-	c, err := parseArgs(args)
+	opt, err := config.ParseFlags(os.Stdout, os.Args[1:])
 	if err != nil {
-		fmt.Fprintln(stdout, err)
-		printUsage(stdout)
-		return 1
+		fmt.Fprintln(os.Stdout, err)
+		os.Exit(1)
 	}
 
-	if c.printUsage {
-		printUsage(stdout)
-		return 0
-	}
-
-	err = validateArgs(c)
-	if err != nil {
-		fmt.Fprintln(stdout, err)
-		printUsage(stdout)
-		return 1
-	}
-
-	err = runCmd(stdin, stdout, c)
-	if err != nil {
-		fmt.Fprintln(stdout, err)
-		return 1
-	}
-	return 0
-}
-
-func getName(r io.Reader, w io.Writer) (string, error) {
-	msg := "Your Name Please? Press the Enter Key when done.\n"
-	fmt.Fprintf(w, msg)
-	scanner := bufio.NewScanner(r)
-	scanner.Scan()
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-
-	name := scanner.Text()
-	if len(name) == 0 {
-		return "", errors.New("You didn't enter your name")
-	}
-	return name, nil
-}
-
-type config struct {
-	numTimes   int
-	printUsage bool
-}
-
-func parseArgs(args []string) (config, error) {
-	var (
-		numTimes int
-		err      error
-	)
-	c := config{}
-
-	if len(args) != 1 {
-		return c, errors.New("Invalid number of arguments")
-	}
-
-	if args[0] == "-h" || args[0] == "--help" {
-		c.printUsage = true
-		return c, nil
-	}
-
-	numTimes, err = strconv.Atoi(args[0])
-	if err != nil {
-		return c, err
-	}
-	c.numTimes = numTimes
-	return c, nil
-}
-
-func validateArgs(c config) error {
-	if !(c.numTimes > 0) {
-		return errors.New("Must specify a number greater then 0")
-	}
-	return nil
-}
-
-func runCmd(r io.Reader, w io.Writer, c config) error {
-	name, err := getName(r, w)
-	if err != nil {
-		return err
-	}
-	greetUser(c, name, w)
-	return nil
-}
-
-func greetUser(c config, name string, w io.Writer) {
-	msg := fmt.Sprintf("Nice to meet you %s\n", name)
-	for i := 0; i < c.numTimes; i++ {
-		fmt.Fprintf(w, msg)
-	}
-}
-
-func printUsage(w io.Writer) {
-	fmt.Fprintf(w, usageString)
+	fmt.Println("Mode:", opt.Mode)
+	fmt.Println("Env:", opt.Env)
 }
