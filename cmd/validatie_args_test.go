@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"errors"
+	"strings"
 	"testing"
 )
 
@@ -33,5 +35,26 @@ func TestValidateArgs(t *testing.T) {
 		if tc.err == nil && err != nil {
 			t.Errorf("Expected nill error, got: %v\n", err)
 		}
+
+	}
+}
+
+func TestRun_ValidateArgsError(t *testing.T) {
+	stdin := strings.NewReader("Reo\n")
+	stdout := &bytes.Buffer{}
+
+	exitCode := run(stdin, stdout, []string{"0"})
+	if exitCode != 1 {
+		t.Fatalf("expected exit code 1, got %d", exitCode)
+	}
+
+	got := stdout.String()
+
+	if !strings.Contains(got, "Must specify a number greater then 0") {
+		t.Fatalf("expected validation error in ouput, got %q", got)
+	}
+
+	if !strings.Contains(got, "Usage:") {
+		t.Fatalf("expected usage in output, got %q", got)
 	}
 }

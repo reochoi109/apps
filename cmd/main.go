@@ -16,26 +16,35 @@ of times.
 `, os.Args[0])
 
 func main() {
-	c, err := parseArgs(os.Args[1:])
+	os.Exit(run(os.Stdin, os.Stdout, os.Args[1:]))
+}
+
+func run(stdin io.Reader, stdout io.Writer, args []string) int {
+	c, err := parseArgs(args)
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err)
-		printUsage(os.Stdout)
-		os.Exit(1)
+		fmt.Fprintln(stdout, err)
+		printUsage(stdout)
+		return 1
+	}
+
+	if c.printUsage {
+		printUsage(stdout)
+		return 0
 	}
 
 	err = validateArgs(c)
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err)
-		printUsage(os.Stdout)
-		os.Exit(1)
+		fmt.Fprintln(stdout, err)
+		printUsage(stdout)
+		return 1
 	}
 
-	err = runCmd(os.Stdin, os.Stdout, c)
+	err = runCmd(stdin, stdout, c)
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err)
-		os.Exit(1)
+		fmt.Fprintln(stdout, err)
+		return 1
 	}
-
+	return 0
 }
 
 func getName(r io.Reader, w io.Writer) (string, error) {
@@ -91,10 +100,6 @@ func validateArgs(c config) error {
 }
 
 func runCmd(r io.Reader, w io.Writer, c config) error {
-	if c.printUsage {
-		printUsage(w)
-		return nil
-	}
 	name, err := getName(r, w)
 	if err != nil {
 		return err
