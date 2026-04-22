@@ -1,9 +1,9 @@
 package main
 
 import (
-	"apps/internal/cli"
 	"fmt"
 	"os"
+	"utils/internal/cli"
 )
 
 func main() {
